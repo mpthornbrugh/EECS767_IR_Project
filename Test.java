@@ -54,11 +54,14 @@ public class Test {
 
     public static void printMap(Map mp) {
         Iterator it = mp.entrySet().iterator();
+        int count = 0;
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             System.out.println(pair.getKey() + " = " + pair.getValue());
             it.remove(); // avoids a ConcurrentModificationException
+            count++;
         }
+        System.out.println("numWords: " + count);
     }
 
     public static boolean isNumeric(String str)
@@ -142,6 +145,9 @@ public class Test {
             if (!isWeb(retval)) {
                 s = processWord(retval);
             }
+            else {
+                s = s.replace("\"", "");
+            }
             s = s.replaceAll("\\s","");
             if (!s.equals("")) {
                 updatedText += s;
@@ -179,24 +185,79 @@ public class Test {
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             //System.out.println(pair.getKey() + " = " + pair.getValue());
-            writer.println(pair.getKey() + " = " + pair.getValue());
+            writer.println(pair.getKey() + " " + pair.getValue());
             it.remove(); // avoids a ConcurrentModificationException
         }
         writer.close();
     }
 
+    public static void indexDirectory(String directoryName) throws IOException{
+        File dir = new File(directoryName);
+        File[] directoryListing = dir.listFiles();
+
+        Map<String, Integer> repetitionMap = new HashMap<String, Integer>();
+
+        for (File child : directoryListing) {
+            if ('.' == child.getName().charAt(0)) {
+                continue;
+            }
+            String fileText = new Scanner(child).useDelimiter("\\Z").next();
+
+            for (String str : fileText.split("\n")) {
+                String[] newStringArray = str.split(" ");
+                int value = Integer.parseInt(newStringArray[1]);
+                if (repetitionMap.containsKey(newStringArray[0])) {
+                    repetitionMap.put(newStringArray[0],repetitionMap.get(newStringArray[0]) + value);
+                }
+                else {
+                    repetitionMap.put(newStringArray[0], value);
+                }
+            }
+        }
+
+        Map<String, Integer> map = new TreeMap<String, Integer>(repetitionMap);
+
+        PrintWriter writer = new PrintWriter("final.txt", "UTF-8");
+
+        Iterator it = map.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            //System.out.println(pair.getKey() + " = " + pair.getValue());
+            writer.println(pair.getKey() + " " + pair.getValue());
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+        writer.close();
+
+        printMap(map);
+    }
+
     public static void main(String [] args) throws IOException {
+        System.out.println("Please select from the following list:");
+        System.out.println("1. Tokenize and Index");
+        System.out.println("2. Tokenize only");
+        System.out.println("3. Index only");
+        Scanner reader = new Scanner(System.in);
+        int n = reader.nextInt();
+
+        if (n == 1 || n == 2) {
+/*#####################################################################*/
+/*######################Starting the file tokenizing###################*/
+/*#####################################################################*/
         File dir = new File("docsnew");
         File[] directoryListing = dir.listFiles();
         int count = 0;
         long startTime, stopTime, elapsedTime;
         if (directoryListing != null) {
             for (File child : directoryListing) {
+                if ('.' == child.getName().charAt(0)) {
+                    continue;
+                }
                 String outFile = "out/" + count + ".txt";
                 String inFile = "docsnew/" + child.getName();
                 startTime = System.currentTimeMillis();
                 tokenizeFile(inFile, outFile);
                 stopTime = System.currentTimeMillis();
+                System.out.print("Time Taken(ms): ");
                 System.out.print(stopTime - startTime);
                 System.out.print(" ");
                 count++;
@@ -205,8 +266,21 @@ public class Test {
         } else {
             System.out.println("Directory docsnew doesn't exist");
         }
+/*#####################################################################*/
+/*######################Ending the file tokenizing#####################*/
+/*#####################################################################*/
+        }
+        if (n == 1 || n == 3) {
+/*#####################################################################*/
+/*######################Starting the indexing process##################*/
+/*#####################################################################*/
 
-        //tokenizeFile("Acadia_National_Park.htm", "1.txt");
+        indexDirectory("out");
+
+/*#####################################################################*/
+/*######################Ending the indexing process####################*/
+/*#####################################################################*/
+        }
     }
 }
 

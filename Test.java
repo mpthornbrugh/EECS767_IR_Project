@@ -2,6 +2,17 @@ import java.io.*;
 import java.util.*;
 
 public class Test {
+    public static void printListOfLists (List x, PrintWriter writer) throws IOException{
+        for (int i = 0; i < x.size(); i++) {
+            printList(x, writer);
+            writer.println();
+        }
+    }
+
+    public static void printList (List x, PrintWriter writer) {
+        writer.println(Arrays.toString(x.toArray()));
+    }
+
     private static String eliminateHTMLEntities (String x) {
         x = x.replace("&#160;", " ");
         x = x.replace("&amp;", " ");
@@ -191,11 +202,15 @@ public class Test {
         writer.close();
     }
 
-    public static void indexDirectory(String directoryName) throws IOException{
+    public static List<List> indexDirectory(String directoryName) throws IOException{
         File dir = new File(directoryName);
         File[] directoryListing = dir.listFiles();
 
         Map<String, Integer> repetitionMap = new HashMap<String, Integer>();
+
+        int numFiles = directoryListing.length;
+        int numWords = 0;
+        List<String> allWords = new ArrayList<String>();
 
         for (File child : directoryListing) {
             if ('.' == child.getName().charAt(0)) {
@@ -210,6 +225,7 @@ public class Test {
                     repetitionMap.put(newStringArray[0],repetitionMap.get(newStringArray[0]) + value);
                 }
                 else {
+                    numWords++;
                     repetitionMap.put(newStringArray[0], value);
                 }
             }
@@ -217,18 +233,69 @@ public class Test {
 
         Map<String, Integer> map = new TreeMap<String, Integer>(repetitionMap);
 
+        for (Map.Entry<String, Integer> entry : map.entrySet())
+        {
+          String key = entry.getKey();
+          allWords.add(key);
+        }
+
         PrintWriter writer = new PrintWriter("final.txt", "UTF-8");
+        PrintWriter writer2 = new PrintWriter("final_words.txt", "UTF-8");
 
         Iterator it = map.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             //System.out.println(pair.getKey() + " = " + pair.getValue());
             writer.println(pair.getKey() + " " + pair.getValue());
+            writer2.println(pair.getKey());
             it.remove(); // avoids a ConcurrentModificationException
         }
         writer.close();
+        writer2.close();
 
-        printMap(map);
+        List<List> index = new ArrayList<List>();
+
+        for (File child : directoryListing) {
+            if ('.' == child.getName().charAt(0)) {
+                continue;
+            }
+            String fileText = new Scanner(child).useDelimiter("\\Z").next();
+            String[] fileTextArray = fileText.split("\n");
+            String curWord = fileTextArray[0].split(" ")[0];
+            int x = 0;
+            List<Integer> fileIndex = new ArrayList<Integer>();
+            for (String element : allWords) {
+                if (element.equals(curWord)) {
+                    fileIndex.add(1);
+                    x++;
+                    if (x != fileTextArray.length) {
+                        curWord = fileTextArray[x].split(" ")[0];
+                    }
+                }
+                else {
+                    fileIndex.add(0);
+                }
+            }
+            index.add(fileIndex);
+        }
+
+        return index;
+
+        // Uncomment this if you'd like to output the index. Be warned it will be a big file and this will take a considerable amount of time.
+        // PrintWriter writer3 = new PrintWriter("index.txt", "UTF-8");
+        // printListOfLists(index, writer3);
+        // writer3.close();
+    }
+
+    public static Map<String, Integer> getWordHash() throws IOException{
+        String fileText = new Scanner(new File("final_words.txt")).useDelimiter("\\Z").next();
+        Map<String, Integer> hash = new HashMap<String, Integer>();
+        int count = 0;
+        for (String str : fileText.split("\n")) {
+            hash.put(str, count);
+            count++;
+        }
+        return hash;
     }
 
     public static void main(String [] args) throws IOException {
@@ -274,8 +341,24 @@ public class Test {
 /*#####################################################################*/
 /*######################Starting the indexing process##################*/
 /*#####################################################################*/
+        List<List> index = new ArrayList<List>();
+        Map<String, Integer> wordHash = new HashMap<String, Integer>();
+        wordHash = getWordHash();
+        long start = System.currentTimeMillis();
+        index = indexDirectory("out");
+        System.out.println("Time to index(ms): " + (System.currentTimeMillis() - start));
+        System.out.println("Size of list: " + index.size());
 
-        indexDirectory("out");
+        System.out.println("Testing if I can get all documents containing: WORLDS");
+
+        int hashValue = wordHash.get("WORLDS");
+        int y = 0;
+        for (List<Integer> list : index) {
+            if (list.get(hashValue) == 1) {
+                System.out.println("Document " + y + " contains WORLDS.");
+            }
+            y++;
+        }
 
 /*#####################################################################*/
 /*######################Ending the indexing process####################*/

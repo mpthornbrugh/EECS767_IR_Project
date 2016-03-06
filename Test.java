@@ -168,8 +168,6 @@ public class Test {
 
         String[] stringArray = updatedText.split(" ");
 
-        Arrays.sort(stringArray);
-
         System.out.print("numWords: ");
         System.out.print(stringArray.length);
         System.out.print(" ");
@@ -177,7 +175,7 @@ public class Test {
         int cnt = -1;
         String curWord = "";
 
-        Map<String,Integer> repetitionMap= new HashMap<String,Integer>();
+        Map<String,Integer> repetitionMap= new TreeMap<String,Integer>();
         for(String str : stringArray){
 
             if(repetitionMap.containsKey(str)) {
@@ -188,11 +186,9 @@ public class Test {
             }
         }
 
-        Map<String, Integer> map = new TreeMap<String, Integer>(repetitionMap);
-
         PrintWriter writer = new PrintWriter(outFile, "UTF-8");
 
-        Iterator it = map.entrySet().iterator();
+        Iterator it = repetitionMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             //System.out.println(pair.getKey() + " = " + pair.getValue());
@@ -202,11 +198,11 @@ public class Test {
         writer.close();
     }
 
-    public static List<List> indexDirectory(String directoryName) throws IOException{
+    public static List<List<Integer>> indexDirectory(String directoryName) throws IOException{
         File dir = new File(directoryName);
         File[] directoryListing = dir.listFiles();
 
-        Map<String, Integer> repetitionMap = new HashMap<String, Integer>();
+        Map<String, Integer> repetitionMap = new TreeMap<String, Integer>();
 
         int numFiles = directoryListing.length;
         int numWords = 0;
@@ -231,29 +227,22 @@ public class Test {
             }
         }
 
-        Map<String, Integer> map = new TreeMap<String, Integer>(repetitionMap);
-
-        for (Map.Entry<String, Integer> entry : map.entrySet())
-        {
-          String key = entry.getKey();
-          allWords.add(key);
-        }
-
         PrintWriter writer = new PrintWriter("final.txt", "UTF-8");
         PrintWriter writer2 = new PrintWriter("final_words.txt", "UTF-8");
 
-        Iterator it = map.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            //System.out.println(pair.getKey() + " = " + pair.getValue());
-            writer.println(pair.getKey() + " " + pair.getValue());
-            writer2.println(pair.getKey());
-            it.remove(); // avoids a ConcurrentModificationException
+        for (Map.Entry<String, Integer> entry : repetitionMap.entrySet())
+        {
+            String key = entry.getKey();
+            allWords.add(key);
+
+            writer.println(entry.getKey() + " " + entry.getValue());
+            writer2.println(entry.getKey());
         }
+
         writer.close();
         writer2.close();
 
-        List<List> index = new ArrayList<List>();
+        List<List<Integer>> index = new ArrayList<List<Integer>>();
 
         for (File child : directoryListing) {
             if ('.' == child.getName().charAt(0)) {
@@ -312,14 +301,14 @@ public class Test {
 /*#####################################################################*/
         File dir = new File("docsnew");
         File[] directoryListing = dir.listFiles();
-        int count = 0;
+        int count = 10;
         long startTime, stopTime, elapsedTime;
         if (directoryListing != null) {
             for (File child : directoryListing) {
                 if ('.' == child.getName().charAt(0)) {
                     continue;
                 }
-                String outFile = "out/" + count + ".txt";
+                String outFile = "out/" + (child.getName().substring(0, child.getName().indexOf("."))) + ".txt";
                 String inFile = "docsnew/" + child.getName();
                 startTime = System.currentTimeMillis();
                 tokenizeFile(inFile, outFile);
@@ -341,7 +330,7 @@ public class Test {
 /*#####################################################################*/
 /*######################Starting the indexing process##################*/
 /*#####################################################################*/
-        List<List> index = new ArrayList<List>();
+        List<List<Integer>> index = new ArrayList<List<Integer>>();
         Map<String, Integer> wordHash = new HashMap<String, Integer>();
         wordHash = getWordHash();
         long start = System.currentTimeMillis();
@@ -353,11 +342,19 @@ public class Test {
 
         int hashValue = wordHash.get("WORLDS");
         int y = 0;
-        for (List<Integer> list : index) {
-            if (list.get(hashValue) == 1) {
-                System.out.println("Document " + y + " contains WORLDS.");
+
+        File dir2 = new File("out");
+        File[] directoryListing2 = dir2.listFiles();
+
+        for (File child : directoryListing2) {
+            if ('.' == child.getName().charAt(0)) {
+                continue;
             }
+            List<Integer> curList = index.get(y);
             y++;
+            if (curList.get(hashValue) == 1) {
+                System.out.println("Document " + child.getName() + " contains WORLDS.");
+            }
         }
 
 /*#####################################################################*/

@@ -148,23 +148,7 @@ public class Test {
 
         newText = newText.replaceAll("\\s+"," ");
 
-        String updatedText = "";
-
-        for (String retval: newText.split(" ")){
-            retval = retval.toUpperCase();
-            String s = retval;
-            if (!isWeb(retval)) {
-                s = processWord(retval);
-            }
-            else {
-                s = s.replace("\"", "");
-            }
-            s = s.replaceAll("\\s","");
-            if (!s.equals("")) {
-                updatedText += s;
-                updatedText += " ";
-            }
-        }
+        String updatedText = processString(newText);
 
         String[] stringArray = updatedText.split(" ");
 
@@ -287,6 +271,66 @@ public class Test {
         return hash;
     }
 
+    public static String processString(String str) {
+        String processedString = "";
+        for (String retval: str.split(" ")){
+            retval = retval.toUpperCase();
+            String s = retval;
+            if (!isWeb(retval)) {
+                s = processWord(retval);
+            }
+            else {
+                s = s.replace("\"", "");
+            }
+            s = s.replaceAll("\\s","");
+            if (!s.equals("")) {
+                processedString += s;
+                processedString += " ";
+            }
+        }
+        processedString = processedString.substring(0, processedString.length() - 1);
+
+        return processedString;
+    }
+
+    public static void runQuery(Map<String, Integer> wordHash, List<List<Integer>> index, String processedQuery) throws IOException{
+        String[] qArgs = processedQuery.split(" ");
+
+        int count = 0;
+
+        File dir = new File("out");
+        File[] directoryListing = dir.listFiles();
+
+        boolean foundAFile = false;
+
+        for (File child : directoryListing) {
+            if ('.' == child.getName().charAt(0)) {
+                continue;
+            }
+            List<Integer> curList = index.get(count);
+            count++;
+            boolean failedQuery = false;
+            boolean hadArgsInHash = false;
+            for (String arg : qArgs) {
+                if (wordHash.containsKey(arg)) {
+                    hadArgsInHash = true;
+                    int hashValue = wordHash.get(arg);
+                    if (curList.get(hashValue) == 0) {
+                        failedQuery = true;
+                    }
+                }
+            }
+            if (!failedQuery && hadArgsInHash) {
+                foundAFile = true;
+                System.out.println("Document " + child.getName() + " satisfies the query.");
+            }
+        }
+
+        if (!foundAFile) {
+            System.out.println("None of the documents had the words in your query.");
+        }
+    }
+
     public static void main(String [] args) throws IOException {
         System.out.println("Please select from the following list:");
         System.out.println("1. Tokenize and Index");
@@ -294,73 +338,74 @@ public class Test {
         System.out.println("3. Index only");
         Scanner reader = new Scanner(System.in);
         int n = reader.nextInt();
+        reader.nextLine();
 
         if (n == 1 || n == 2) {
 /*#####################################################################*/
 /*######################Starting the file tokenizing###################*/
 /*#####################################################################*/
-        File dir = new File("docsnew");
-        File[] directoryListing = dir.listFiles();
-        int count = 10;
-        long startTime, stopTime, elapsedTime;
-        if (directoryListing != null) {
-            for (File child : directoryListing) {
-                if ('.' == child.getName().charAt(0)) {
-                    continue;
+            File dir = new File("docsnew");
+            File[] directoryListing = dir.listFiles();
+            int count = 10;
+            long startTime, stopTime, elapsedTime;
+            if (directoryListing != null) {
+                for (File child : directoryListing) {
+                    if ('.' == child.getName().charAt(0)) {
+                        continue;
+                    }
+                    String outFile = "out/" + (child.getName().substring(0, child.getName().indexOf("."))) + ".txt";
+                    String inFile = "docsnew/" + child.getName();
+                    startTime = System.currentTimeMillis();
+                    tokenizeFile(inFile, outFile);
+                    stopTime = System.currentTimeMillis();
+                    System.out.print("Time Taken(ms): ");
+                    System.out.print(stopTime - startTime);
+                    System.out.print(" ");
+                    count++;
+                    System.out.println(inFile);
                 }
-                String outFile = "out/" + (child.getName().substring(0, child.getName().indexOf("."))) + ".txt";
-                String inFile = "docsnew/" + child.getName();
-                startTime = System.currentTimeMillis();
-                tokenizeFile(inFile, outFile);
-                stopTime = System.currentTimeMillis();
-                System.out.print("Time Taken(ms): ");
-                System.out.print(stopTime - startTime);
-                System.out.print(" ");
-                count++;
-                System.out.println(inFile);
+            } else {
+                System.out.println("Directory docsnew doesn't exist");
             }
-        } else {
-            System.out.println("Directory docsnew doesn't exist");
-        }
 /*#####################################################################*/
 /*######################Ending the file tokenizing#####################*/
 /*#####################################################################*/
         }
+        List<List<Integer>> index = new ArrayList<List<Integer>>();
+        Map<String, Integer> wordHash = new HashMap<String, Integer>();
         if (n == 1 || n == 3) {
 /*#####################################################################*/
 /*######################Starting the indexing process##################*/
 /*#####################################################################*/
-        List<List<Integer>> index = new ArrayList<List<Integer>>();
-        Map<String, Integer> wordHash = new HashMap<String, Integer>();
-        wordHash = getWordHash();
-        long start = System.currentTimeMillis();
-        index = indexDirectory("out");
-        System.out.println("Time to index(ms): " + (System.currentTimeMillis() - start));
-        System.out.println("Size of list: " + index.size());
-
-        System.out.println("Testing if I can get all documents containing: WORLDS");
-
-        int hashValue = wordHash.get("WORLDS");
-        int y = 0;
-
-        File dir2 = new File("out");
-        File[] directoryListing2 = dir2.listFiles();
-
-        for (File child : directoryListing2) {
-            if ('.' == child.getName().charAt(0)) {
-                continue;
-            }
-            List<Integer> curList = index.get(y);
-            y++;
-            if (curList.get(hashValue) == 1) {
-                System.out.println("Document " + child.getName() + " contains WORLDS.");
-            }
-        }
+            wordHash = getWordHash();
+            long start = System.currentTimeMillis();
+            index = indexDirectory("out");
+            System.out.println("Time to index(ms): " + (System.currentTimeMillis() - start));
 
 /*#####################################################################*/
 /*######################Ending the indexing process####################*/
 /*#####################################################################*/
         }
+/*#####################################################################*/
+/*######################Starting the querying process##################*/
+/*#####################################################################*/
+        while (true) {
+            System.out.println("Please input a query you would like to search for:");
+            String query = reader.nextLine();
+
+            long start = System.currentTimeMillis();
+            runQuery(wordHash, index, processString(query));
+            System.out.println("Time to query(ms): " + (System.currentTimeMillis() - start));
+
+            System.out.println("Would you like to do another query? y/n");
+            String again = reader.nextLine();
+            if (again.toUpperCase().equals("N")) {
+                break;
+            }
+        }
+/*#####################################################################*/
+/*######################Ending the querying process####################*/
+/*#####################################################################*/
     }
 }
 

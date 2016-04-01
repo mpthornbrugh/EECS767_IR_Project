@@ -1,9 +1,11 @@
+
 import java.io.*;
 import java.util.*;
 
 public class Test {
     public static String[] stopwords = {"a", "as", "able", "about", "above", "according", "accordingly", "across", "actually", "after", "afterwards", "again", "against", "aint", "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "arent", "around", "as", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", "cmon", "cs", "came", "can", "cant", "cannot", "cant", "cause", "causes", "certain", "certainly", "changes", "clearly", "co", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldnt", "course", "currently", "definitely", "described", "despite", "did", "didnt", "different", "do", "does", "doesnt", "doing", "dont", "done", "down", "downwards", "during", "each", "edu", "eg", "eight", "either", "else", "elsewhere", "enough", "entirely", "especially", "et", "etc", "even", "ever", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except", "far", "few", "ff", "fifth", "first", "five", "followed", "following", "follows", "for", "former", "formerly", "forth", "four", "from", "further", "furthermore", "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings", "had", "hadnt", "happens", "hardly", "has", "hasnt", "have", "havent", "having", "he", "hes", "hello", "help", "hence", "her", "here", "heres", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "hi", "him", "himself", "his", "hither", "hopefully", "how", "howbeit", "however", "i", "id", "ill", "im", "ive", "ie", "if", "ignored", "immediate", "in", "inasmuch", "inc", "indeed", "indicate", "indicated", "indicates", "inner", "insofar", "instead", "into", "inward", "is", "isnt", "it", "itd", "itll", "its", "its", "itself", "just", "keep", "keeps", "kept", "know", "knows", "known", "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "lets", "like", "liked", "likely", "little", "look", "looking", "looks", "ltd", "mainly", "many", "may", "maybe", "me", "mean", "meanwhile", "merely", "might", "more", "moreover", "most", "mostly", "much", "must", "my", "myself", "name", "namely", "nd", "near", "nearly", "necessary", "need", "needs", "neither", "never", "nevertheless", "new", "next", "nine", "no", "nobody", "non", "none", "noone", "nor", "normally", "not", "nothing", "novel", "now", "nowhere", "obviously", "of", "off", "often", "oh", "ok", "okay", "old", "on", "once", "one", "ones", "only", "onto", "or", "other", "others", "otherwise", "ought", "our", "ours", "ourselves", "out", "outside", "over", "overall", "own", "particular", "particularly", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provides", "que", "quite", "qv", "rather", "rd", "re", "really", "reasonably", "regarding", "regardless", "regards", "relatively", "respectively", "right", "said", "same", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "she", "should", "shouldnt", "since", "six", "so", "some", "somebody", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "still", "sub", "such", "sup", "sure", "ts", "take", "taken", "tell", "tends", "th", "than", "thank", "thanks", "thanx", "that", "thats", "thats", "the", "their", "theirs", "them", "themselves", "then", "thence", "there", "theres", "thereafter", "thereby", "therefore", "therein", "theres", "thereupon", "these", "they", "theyd", "theyll", "theyre", "theyve", "think", "third", "this", "thorough", "thoroughly", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "twice", "two", "un", "under", "unfortunately", "unless", "unlikely", "until", "unto", "up", "upon", "us", "use", "used", "useful", "uses", "using", "usually", "value", "various", "very", "via", "viz", "vs", "want", "wants", "was", "wasnt", "way", "we", "wed", "well", "were", "weve", "welcome", "well", "went", "were", "werent", "what", "whats", "whatever", "when", "whence", "whenever", "where", "wheres", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whos", "whoever", "whole", "whom", "whose", "why", "will", "willing", "wish", "with", "within", "without", "wont", "wonder", "would", "would", "wouldnt", "yes", "yet", "you", "youd", "youll", "youre", "youve", "your", "yours", "yourself", "yourselves", "zero"};
     public static int fileCount = 0; //N in idf
+    public static List<Double> idfList = new ArrayList<Double>();
 
     public static void printListOfLists (List x, PrintWriter writer) throws IOException{
         for (int i = 0; i < x.size(); i++) {
@@ -355,9 +357,90 @@ public class Test {
         }
     }
 
+    public static double dotProduct(List<Double> a, List<Double> b) {
+        double sum = 0;
+        for (int i = 0; i < a.size(); i++) {
+            sum += a.get(i) * b.get(i);
+        }
+        return sum;
+    }
+
+    public static void runVectorQuery(Map<String, Integer> wordHash, List<List<Double>> index, String processedQuery) {
+        if (processedQuery.length() < 1) {
+            System.out.println("Query contains only stop words.");
+            return;
+        }
+
+        File dir = new File("docsnew");
+        File[] directoryListing = dir.listFiles();
+
+        //Create the query vector from the queryText
+        List<Integer> intQueryVector = new ArrayList<Integer>();
+        for (int i = 0; i < wordHash.size(); i++) {
+            intQueryVector.add(0);
+        }
+        for (String arg : processedQuery.split(" ")) {
+            if (wordHash.containsKey(arg)) {
+                int hashValue = wordHash.get(arg);
+                intQueryVector.set(hashValue, (intQueryVector.get(hashValue) + 1));
+            }
+        }
+
+        List<Double> doubleQueryVector = new ArrayList<Double>();
+        double vectorLength = 0, sum = 0;
+        for (int i = 0; i < intQueryVector.size(); i++) {
+            double val = intQueryVector.get(i) * idfList.get(i);
+            doubleQueryVector.add(val);
+            sum += (val * val);
+        }
+        vectorLength = Math.sqrt(sum);
+        for (int i = 0; i < doubleQueryVector.size(); i++) {
+            doubleQueryVector.set(i, (doubleQueryVector.get(i)/vectorLength));
+        }
+
+        //Query vector finished. Now need to compare to all documents.
+        int docAmount = index.size();
+        List<Double> similarityList = new ArrayList<Double>();
+        for (int i = 0; i < docAmount; i++) {
+            double dotVal = dotProduct(doubleQueryVector, index.get(i));
+            similarityList.add(dotVal);
+        }
+
+        //similarityList now has the values that are needed for the ranking of the documents.
+        Map<Double,String> repetitionMap= new TreeMap<Double,String>(Collections.reverseOrder());
+        for(int i = 0; i < similarityList.size(); i++){
+            double key = similarityList.get(i);
+            if (key > 0) {
+                //
+                if(repetitionMap.containsKey(key)) {
+                    //If two of them have exactly the same value then we would end up here which will be very rare.
+                    //repetitionMap.put(key ,repetitionMap.get(key) + "," + Integer.toString(i));
+                }
+                else {
+                    repetitionMap.put(key, Integer.toString(i));
+                }
+            }
+        }
+
+        String successString = "";
+
+        Iterator it = repetitionMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            successString += pair.getValue() + ",";
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+
+        successString = successString.substring(0, successString.length() - 1);
+
+        for (String str : successString.split(",")) {
+            int val = Integer.parseInt(str) + 1;
+            System.out.println("Document " + directoryListing[val] + " satisfies the query.");
+        }
+    }
+
     public static List<List<Double>> createInvertedIndex(List<List<Integer>> index, Map<String, Integer> wordHash) throws IOException {
         String fileText = new Scanner(new File("final.txt")).useDelimiter("\\Z").next();
-        List<Double> idfList = new ArrayList<Double>();
         //Create a list that will hold all the idf values for all the terms
         for (String dictStr : fileText.split("\n")) {
             String[] strArr = dictStr.split(" ");
@@ -449,37 +532,72 @@ public class Test {
             System.out.println("Time to index(ms): " + (System.currentTimeMillis() - start));
 
             
-
+            System.out.println("Please select from the following list:");
+            System.out.println("1. Boolean Model Query");
+            System.out.println("2. Vector Model Query");
+            n = reader.nextInt();
+            reader.nextLine();
 /*#####################################################################*/
 /*######################Ending the indexing process####################*/
 /*#####################################################################*/
+            if (n == 1) {
 /*#####################################################################*/
-/*######################Starting the querying process##################*/
+/*##############Starting the boolean querying process##################*/
 /*#####################################################################*/
-            while (true) {
-                System.out.println("Please input a query you would like to search for:");
-                String query = reader.nextLine();
+                while (true) {
+                    System.out.println("Please input a query you would like to search for:");
+                    String query = reader.nextLine();
 
-                long queryStart = System.currentTimeMillis();
-                String formattedQuery = processString(query);
+                    long queryStart = System.currentTimeMillis();
+                    String formattedQuery = processString(query);
 
-                if (formattedQuery.length() < 1) {
-                    System.out.println("The query contains only stop words.");
-                }
-                else {
-                    runQuery(wordHash, booleanIndex, processString(query));
-                    System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
-                }
+                    if (formattedQuery.length() < 1) {
+                        System.out.println("The query contains only stop words.");
+                    }
+                    else {
+                        runQuery(wordHash, booleanIndex, formattedQuery);
+                        System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
+                    }
 
-                System.out.println("Would you like to do another query? y/n");
-                String again = reader.nextLine();
-                if (again.toUpperCase().equals("N")) {
-                    break;
+                    System.out.println("Would you like to do another query? y/n");
+                    String again = reader.nextLine();
+                    if (again.toUpperCase().equals("N")) {
+                        break;
+                    }
                 }
+/*#####################################################################*/
+/*##############Ending the boolean querying process####################*/
+/*#####################################################################*/
             }
+            else if (n == 2) {
 /*#####################################################################*/
-/*######################Ending the querying process####################*/
+/*##############Starting the vector querying process###################*/
 /*#####################################################################*/
+                while (true) {
+                    System.out.println("Please input a query you would like to search for:");
+                    String query = reader.nextLine();
+
+                    long queryStart = System.currentTimeMillis();
+                    String formattedQuery = processString(query);
+
+                    if (formattedQuery.length() < 1) {
+                        System.out.println("The query contains only stop words.");
+                    }
+                    else {
+                        runVectorQuery(wordHash, vectorIndex, formattedQuery);
+                        System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
+                    }
+
+                    System.out.println("Would you like to do another query? y/n");
+                    String again = reader.nextLine();
+                    if (again.toUpperCase().equals("N")) {
+                        break;
+                    }
+                }
+/*#####################################################################*/
+/*################Ending the vector querying process###################*/
+/*#####################################################################*/                
+            }
         }
     }
 }

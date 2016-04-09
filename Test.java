@@ -472,12 +472,11 @@ public class Test {
     }
 
     public static void main(String [] args) throws IOException {
-        Stemmer s = new Stemmer();
-
         System.out.println("Please select from the following list:");
         System.out.println("1. Tokenize and Index");
         System.out.println("2. Tokenize only");
         System.out.println("3. Index only");
+        System.out.println("4. Crawl Pages.");
         Scanner reader = new Scanner(System.in);
         int n = reader.nextInt();
         reader.nextLine();
@@ -598,6 +597,18 @@ public class Test {
 /*################Ending the vector querying process###################*/
 /*#####################################################################*/                
             }
+        }
+        if (n == 4) {
+/*#####################################################################*/
+/*#################Starting the web crawling process###################*/
+/*#####################################################################*/
+            File dir = new File("crawled");
+            for(File file: dir.listFiles()) file.delete();
+            WebCrawler w = new WebCrawler();
+            w.processPage("http://www.ku.edu", "ku.edu");
+/*#####################################################################*/
+/*###################Ending the web crawling process###################*/
+/*#####################################################################*/
         }
     }
 }

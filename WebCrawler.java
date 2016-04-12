@@ -15,6 +15,12 @@ public class WebCrawler {
 		//
 	}
 
+	public static void addUrl(String filename) throws IOException {
+		Writer output = new BufferedWriter(new FileWriter("crawled_to_files.txt", true));
+		output.append(filename);
+		output.close();
+	}
+
 	public static void saveUrl(final String filename, final String urlString) throws MalformedURLException, IOException {
 	    BufferedInputStream in = null;
 	    FileOutputStream fout = null;
@@ -58,8 +64,8 @@ public class WebCrawler {
 			try {
 				Document doc = Jsoup.connect(URL).get();
 
-
 				saveUrl(("crawled/" + numUrlsFound + ".htm"), URL);
+				addUrl(URL + "\n");
 				numUrlsFound++;
 
 				System.out.println(URL);

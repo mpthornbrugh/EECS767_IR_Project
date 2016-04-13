@@ -6,19 +6,25 @@ import java.util.*;
 import javafx.application.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.geometry.*;
+import javafx.scene.paint.*;
 import javafx.event.*;
 import javafx.stage.*;
 import javafx.scene.*;
+import javafx.scene.text.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class Test {
+public class Test extends Application {
     public static String[] stopwords = {"a", "as", "able", "about", "above", "according", "accordingly", "across", "actually", "after", "afterwards", "again", "against", "aint", "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "arent", "around", "as", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", "cmon", "cs", "came", "can", "cant", "cannot", "cant", "cause", "causes", "certain", "certainly", "changes", "clearly", "co", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldnt", "course", "currently", "definitely", "described", "despite", "did", "didnt", "different", "do", "does", "doesnt", "doing", "dont", "done", "down", "downwards", "during", "each", "edu", "eg", "eight", "either", "else", "elsewhere", "enough", "entirely", "especially", "et", "etc", "even", "ever", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except", "far", "few", "ff", "fifth", "first", "five", "followed", "following", "follows", "for", "former", "formerly", "forth", "four", "from", "further", "furthermore", "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings", "had", "hadnt", "happens", "hardly", "has", "hasnt", "have", "havent", "having", "he", "hes", "hello", "help", "hence", "her", "here", "heres", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "hi", "him", "himself", "his", "hither", "hopefully", "how", "howbeit", "however", "i", "id", "ill", "im", "ive", "ie", "if", "ignored", "immediate", "in", "inasmuch", "inc", "indeed", "indicate", "indicated", "indicates", "inner", "insofar", "instead", "into", "inward", "is", "isnt", "it", "itd", "itll", "its", "its", "itself", "just", "keep", "keeps", "kept", "know", "knows", "known", "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "lets", "like", "liked", "likely", "little", "look", "looking", "looks", "ltd", "mainly", "many", "may", "maybe", "me", "mean", "meanwhile", "merely", "might", "more", "moreover", "most", "mostly", "much", "must", "my", "myself", "name", "namely", "nd", "near", "nearly", "necessary", "need", "needs", "neither", "never", "nevertheless", "new", "next", "nine", "no", "nobody", "non", "none", "noone", "nor", "normally", "not", "nothing", "novel", "now", "nowhere", "obviously", "of", "off", "often", "oh", "ok", "okay", "old", "on", "once", "one", "ones", "only", "onto", "or", "other", "others", "otherwise", "ought", "our", "ours", "ourselves", "out", "outside", "over", "overall", "own", "particular", "particularly", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provides", "que", "quite", "qv", "rather", "rd", "re", "really", "reasonably", "regarding", "regardless", "regards", "relatively", "respectively", "right", "said", "same", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "she", "should", "shouldnt", "since", "six", "so", "some", "somebody", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "still", "sub", "such", "sup", "sure", "ts", "take", "taken", "tell", "tends", "th", "than", "thank", "thanks", "thanx", "that", "thats", "thats", "the", "their", "theirs", "them", "themselves", "then", "thence", "there", "theres", "thereafter", "thereby", "therefore", "therein", "theres", "thereupon", "these", "they", "theyd", "theyll", "theyre", "theyve", "think", "third", "this", "thorough", "thoroughly", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "twice", "two", "un", "under", "unfortunately", "unless", "unlikely", "until", "unto", "up", "upon", "us", "use", "used", "useful", "uses", "using", "usually", "value", "various", "very", "via", "viz", "vs", "want", "wants", "was", "wasnt", "way", "we", "wed", "well", "were", "weve", "welcome", "well", "went", "were", "werent", "what", "whats", "whatever", "when", "whence", "whenever", "where", "wheres", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whos", "whoever", "whole", "whom", "whose", "why", "will", "willing", "wish", "with", "within", "without", "wont", "wonder", "would", "would", "wouldnt", "yes", "yet", "you", "youd", "youll", "youre", "youve", "your", "yours", "yourself", "yourselves", "zero"};
     public static int fileCount = 0; //N in idf
     public static List<Double> idfList = new ArrayList<Double>();
     public static String dirName = "";
+    public static List<List<Integer>> booleanIndexMain = new ArrayList<List<Integer>>();
+    public static List<List<Double>> vectorIndexMain = new ArrayList<List<Double>>();
+    public static Map<String, Integer> wordHashMain = new HashMap<String, Integer>();
 
     public static void printListOfLists (List x, PrintWriter writer) throws IOException{
         for (int i = 0; i < x.size(); i++) {
@@ -336,7 +342,7 @@ public class Test {
         return processedString;
     }
 
-    public static void runQuery(Map<String, Integer> wordHash, List<List<Integer>> index, String processedQuery) throws IOException{
+    public static String runQuery(Map<String, Integer> wordHash, List<List<Integer>> index, String processedQuery) throws IOException{
         String[] qArgs = processedQuery.split(" ");
 
         int count = 0;
@@ -346,6 +352,7 @@ public class Test {
 
         boolean foundAFile = false;
 
+        String returnString = "";
 
         for (File child : directoryListing) {
             if ('.' == child.getName().charAt(0)) {
@@ -366,13 +373,16 @@ public class Test {
             }
             if (!failedQuery && hadArgsInHash) {
                 foundAFile = true;
+                returnString += child.getName() + ",";
                 System.out.println("Document " + child.getName() + " satisfies the query.");
             }
         }
+        returnString = returnString.substring(0, returnString.length() - 1);
 
         if (!foundAFile) {
             System.out.println("None of the documents had the words in your query.");
         }
+        return returnString;
     }
 
     public static double dotProduct(List<Double> a, List<Double> b) {
@@ -498,6 +508,7 @@ public class Test {
         Scanner reader = new Scanner(System.in);
         int n = reader.nextInt();
         reader.nextLine();
+        dirName = "docsnew";
 
         if (n == 1 || n == 2) {
             System.out.println("Would you like to tokenize the crawled pages (1) or the predefined pages (2)?");
@@ -542,24 +553,22 @@ public class Test {
 /*######################Ending the file tokenizing#####################*/
 /*#####################################################################*/
         }
-        List<List<Integer>> booleanIndex = new ArrayList<List<Integer>>();
-        List<List<Double>> vectorIndex = new ArrayList<List<Double>>();
-        Map<String, Integer> wordHash = new HashMap<String, Integer>();
         if (n == 1 || n == 3) {
 /*#####################################################################*/
 /*######################Starting the indexing process##################*/
 /*#####################################################################*/
-            wordHash = getWordHash();
+            wordHashMain = getWordHash();
             long start = System.currentTimeMillis();
             System.out.println("Creating Boolean Index.");
-            booleanIndex = indexDirectory("out");
+            booleanIndexMain = indexDirectory("out");
             System.out.println("Time to index(ms): " + (System.currentTimeMillis() - start));
 
             System.out.println("Creating Vector Model.");
             start = System.currentTimeMillis();
-            vectorIndex = createInvertedIndex(booleanIndex, wordHash);
+            vectorIndexMain = createInvertedIndex(booleanIndexMain, wordHashMain);
             System.out.println("Time to index(ms): " + (System.currentTimeMillis() - start));
 
+            launch(args);
             
             System.out.println("Please select from the following list:");
             System.out.println("1. Boolean Model Query");
@@ -573,27 +582,27 @@ public class Test {
 /*#####################################################################*/
 /*##############Starting the boolean querying process##################*/
 /*#####################################################################*/
-                while (true) {
-                    System.out.println("Please input a query you would like to search for:");
-                    String query = reader.nextLine();
+                // while (true) {
+                //     System.out.println("Please input a query you would like to search for:");
+                //     String query = reader.nextLine();
 
-                    long queryStart = System.currentTimeMillis();
-                    String formattedQuery = processString(query);
+                //     long queryStart = System.currentTimeMillis();
+                //     String formattedQuery = processString(query);
 
-                    if (formattedQuery.length() < 1) {
-                        System.out.println("The query contains only stop words.");
-                    }
-                    else {
-                        runQuery(wordHash, booleanIndex, formattedQuery);
-                        System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
-                    }
+                //     if (formattedQuery.length() < 1) {
+                //         System.out.println("The query contains only stop words.");
+                //     }
+                //     else {
+                //         runQuery(wordHashMain, booleanIndexMain, formattedQuery);
+                //         System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
+                //     }
 
-                    System.out.println("Would you like to do another query? y/n");
-                    String again = reader.nextLine();
-                    if (again.toUpperCase().equals("N")) {
-                        break;
-                    }
-                }
+                //     System.out.println("Would you like to do another query? y/n");
+                //     String again = reader.nextLine();
+                //     if (again.toUpperCase().equals("N")) {
+                //         break;
+                //     }
+                // }
 /*#####################################################################*/
 /*##############Ending the boolean querying process####################*/
 /*#####################################################################*/
@@ -602,27 +611,27 @@ public class Test {
 /*#####################################################################*/
 /*##############Starting the vector querying process###################*/
 /*#####################################################################*/
-                while (true) {
-                    System.out.println("Please input a query you would like to search for:");
-                    String query = reader.nextLine();
+                // while (true) {
+                //     System.out.println("Please input a query you would like to search for:");
+                //     String query = reader.nextLine();
 
-                    long queryStart = System.currentTimeMillis();
-                    String formattedQuery = processString(query);
+                //     long queryStart = System.currentTimeMillis();
+                //     String formattedQuery = processString(query);
 
-                    if (formattedQuery.length() < 1) {
-                        System.out.println("The query contains only stop words.");
-                    }
-                    else {
-                        runVectorQuery(wordHash, vectorIndex, formattedQuery);
-                        System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
-                    }
+                //     if (formattedQuery.length() < 1) {
+                //         System.out.println("The query contains only stop words.");
+                //     }
+                //     else {
+                //         runVectorQuery(wordHashMain, vectorIndexMain, formattedQuery);
+                //         System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
+                //     }
 
-                    System.out.println("Would you like to do another query? y/n");
-                    String again = reader.nextLine();
-                    if (again.toUpperCase().equals("N")) {
-                        break;
-                    }
-                }
+                //     System.out.println("Would you like to do another query? y/n");
+                //     String again = reader.nextLine();
+                //     if (again.toUpperCase().equals("N")) {
+                //         break;
+                //     }
+                // }
 /*#####################################################################*/
 /*################Ending the vector querying process###################*/
 /*#####################################################################*/                
@@ -642,13 +651,117 @@ public class Test {
 /*###################Ending the web crawling process###################*/
 /*#####################################################################*/
         }
-        if (n == 5) {
-            File abc = new File("crawled/108.htm");
-            String abcContent = new Scanner(abc).useDelimiter("\\Z").next();
-            Document doc = Jsoup.parse(abcContent);//value is your variable having html content
+    }
 
-            System.out.println(doc.text());//gives you plain text
-        }
+    @Override
+    public void start(Stage primaryStage) throws Exception, IOException {
+        primaryStage.setTitle("This is my title");
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.TOP_CENTER);
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(25, 25, 25, 25));
+        Text scenetitle = new Text("Welcome");
+        scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
+        grid.add(scenetitle, 0, 0, 2, 1);
+
+        Label userName = new Label("Vector Query:");
+        grid.add(userName, 0, 1);
+
+        TextField userTextFieldVec = new TextField();
+        grid.add(userTextFieldVec, 1, 1);
+
+        Button btnVec = new Button("Compute");
+        HBox hbBtnVec = new HBox(10);
+        hbBtnVec.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtnVec.getChildren().add(btnVec);
+        grid.add(hbBtnVec, 1, 2);
+
+        Label pw = new Label("Boolean Query:");
+        grid.add(pw, 0, 3);
+
+        TextField userTextFieldBool = new TextField();
+        grid.add(userTextFieldBool, 1, 3);
+
+        Button btn = new Button("Compute");
+        HBox hbBtn = new HBox(10);
+        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.getChildren().add(btn);
+        final Text actiontarget = new Text();
+        ScrollPane sp = new ScrollPane();
+        sp.setContent(actiontarget);
+        grid.add(sp, 1, 5);
+        grid.add(hbBtn, 1, 4);
+        //grid.setStyle("-fx-background-color: white; -fx-grid-lines-visible: true");
+
+        btnVec.setOnAction(new EventHandler<ActionEvent>() {
+ 
+            @Override
+            public void handle(ActionEvent e) {
+                String x = userTextFieldVec.getText();
+                actiontarget.setFill(Color.FIREBRICK);
+                actiontarget.setText(x);
+            }
+        });
+
+        btn.setOnAction(new EventHandler<ActionEvent>() {
+ 
+            @Override
+            public void handle(ActionEvent e) {
+                // while (true) {
+                //     System.out.println("Please input a query you would like to search for:");
+                //     String query = reader.nextLine();
+
+                //     long queryStart = System.currentTimeMillis();
+                //     String formattedQuery = processString(query);
+
+                //     if (formattedQuery.length() < 1) {
+                //         System.out.println("The query contains only stop words.");
+                //     }
+                //     else {
+                //         runQuery(wordHashMain, booleanIndexMain, formattedQuery);
+                //         System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
+                //     }
+
+                //     System.out.println("Would you like to do another query? y/n");
+                //     String again = reader.nextLine();
+                //     if (again.toUpperCase().equals("N")) {
+                //         break;
+                //     }
+                // }
+
+                actiontarget.setFill(Color.FIREBRICK);
+                String output = "";
+                String x = userTextFieldBool.getText();
+                String formattedQuery = processString(x);
+                if (formattedQuery.length() < 1) {
+                    actiontarget.setText("The query contains only stop words.");
+                }
+                else {
+                    try {
+                        String successString = runQuery(wordHashMain, booleanIndexMain, formattedQuery);
+                        if (successString.isEmpty()) {
+                            actiontarget.setText("There are no pages that match the query.");
+                        }
+                        else {
+                            String outputString = "";
+                            for (String str : successString.split(",")) {
+                                outputString += str + "\n";
+                            }
+                            actiontarget.setText(outputString);
+                            //"Document " + child.getName() + " satisfies the query."
+                        }
+                    }
+                    catch (IOException err) {
+                        actiontarget.setText("Error: " + err);
+                    }
+                }
+            }
+        });
+
+        Scene scene = new Scene(grid, 1000, 1000);
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 }
 

@@ -48,17 +48,17 @@ public class WebCrawler {
 		for (String str : urls) {
 			if (URL.equals(str)) {
 				hasUrl = true;
+				break;
 			}
 		}
 
 		if (hasUrl) {
 
 		}
-		else if (urls.size() > 500) {
+		else if (urls.size() > 300) {
 
 		}
 		else {
-			//
 			urls.add(URL);
 
 			try {
@@ -72,8 +72,19 @@ public class WebCrawler {
 
 				Elements questions = doc.select("a[href]");
 				for(Element link: questions){
-					if(link.attr("href").contains(hostName) && (link.attr("href").contains("http:") || link.attr("href").contains("http:")))
-						processPage(link.attr("abs:href"), hostName);
+					if(link.attr("href").contains(hostName) && (link.attr("href").contains("http:") || link.attr("href").contains("http:"))) {
+						String nextUrl = link.attr("abs:href");
+						boolean isNew = true;
+						for (String str : urls) {
+							if (nextUrl.equals(str)) {
+								isNew = false;
+								break;
+							}
+						}
+						if (isNew) {
+							processPage(link.attr("abs:href"), hostName);
+						}
+					}
 				}
 			}
 			catch (IllegalArgumentException e) {

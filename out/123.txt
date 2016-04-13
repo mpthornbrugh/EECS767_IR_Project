@@ -1,0 +1,5 @@
+document 2
+found 1
+move 1
+movedthi 1
+object 1

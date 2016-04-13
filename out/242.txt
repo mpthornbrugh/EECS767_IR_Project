@@ -1,0 +1,5 @@
+affair 1
+offic 1
+provost 1
+student 1
+vice 1

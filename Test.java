@@ -393,14 +393,19 @@ public class Test extends Application {
         return sum;
     }
 
-    public static void runVectorQuery(Map<String, Integer> wordHash, List<List<Double>> index, String processedQuery) {
+    public static String runVectorQuery(Map<String, Integer> wordHash, List<List<Double>> index, String processedQuery) throws FileNotFoundException {
         if (processedQuery.length() < 1) {
             System.out.println("Query contains only stop words.");
-            return;
+            return "";
         }
 
-        File dir = new File(dirName);
+        int hv = wordHash.get("hous");
+        System.out.println(hv);
+
+        File dir = new File("docsnew");
         File[] directoryListing = dir.listFiles();
+
+        String[] fileListing = new Scanner(new File("indexed_files_names.txt")).useDelimiter("\\Z").next().split("\n");
 
         //Create the query vector from the queryText
         List<Integer> intQueryVector = new ArrayList<Integer>();
@@ -415,15 +420,20 @@ public class Test extends Application {
         }
 
         List<Double> doubleQueryVector = new ArrayList<Double>();
-        double vectorLength = 0, sum = 0;
+        double sum = 0.0;
         for (int i = 0; i < intQueryVector.size(); i++) {
             double val = intQueryVector.get(i) * idfList.get(i);
             doubleQueryVector.add(val);
             sum += (val * val);
         }
-        vectorLength = Math.sqrt(sum);
+        Double vectorLength = Math.sqrt(sum);
         for (int i = 0; i < doubleQueryVector.size(); i++) {
-            doubleQueryVector.set(i, (doubleQueryVector.get(i)/vectorLength));
+            if (doubleQueryVector.get(i) == 0.0 || vectorLength == 0.0) {
+                doubleQueryVector.set(i, 0.0);
+            }
+            else {
+                doubleQueryVector.set(i, (doubleQueryVector.get(i)/vectorLength));
+            }
         }
 
         //Query vector finished. Now need to compare to all documents.
@@ -461,10 +471,17 @@ public class Test extends Application {
 
         successString = successString.substring(0, successString.length() - 1);
 
+        String returnStr = "";
+
         for (String str : successString.split(",")) {
-            int val = Integer.parseInt(str) + 1;
-            System.out.println("Document " + directoryListing[val] + " satisfies the query.");
+            int val = Integer.parseInt(str);
+            System.out.println("Document " + fileListing[val] + " satisfies the query.");
+            returnStr += fileListing[val] + ",";
         }
+
+        returnStr = returnStr.substring(0, returnStr.length() - 1);
+
+        return returnStr;
     }
 
     public static List<List<Double>> createInvertedIndex(List<List<Integer>> index, Map<String, Integer> wordHash) throws IOException {
@@ -475,7 +492,7 @@ public class Test extends Application {
             String str = strArr[0];
             int termCount = Integer.parseInt(strArr[1]);
             int docCount = Integer.parseInt(strArr[2]);
-            double idf = Math.log10(fileCount/docCount);
+            double idf = Math.log10(((double)fileCount)/((double)docCount));
             idfList.add(idf);
         }
         int outerListSize = index.size(); //Documents
@@ -511,6 +528,8 @@ public class Test extends Application {
         dirName = "docsnew";
 
         if (n == 1 || n == 2) {
+            File dummy = new File("out");
+            for(File dummyFile: dummy.listFiles()) dummyFile.delete();
             System.out.println("Would you like to tokenize the crawled pages (1) or the predefined pages (2)?");
             int indexN = reader.nextInt();
             if (indexN == 1) {
@@ -528,8 +547,11 @@ public class Test extends Application {
 /*#####################################################################*/
             File dir = new File(dirName);
             File[] directoryListing = dir.listFiles();
-            int count = 10;
             long startTime, stopTime, elapsedTime;
+            PrintWriter fileNameWriter = new PrintWriter("indexed_files_names.txt", "UTF-8");
+            String[] crawledFileArr = new Scanner(new File("crawled_to_files.txt")).useDelimiter("\\Z").next().split("\n");
+            int counter = 0;
+
             if (directoryListing != null) {
                 for (File child : directoryListing) {
                     if ('.' == child.getName().charAt(0)) {
@@ -543,12 +565,20 @@ public class Test extends Application {
                     System.out.print("Time Taken(ms): ");
                     System.out.print(stopTime - startTime);
                     System.out.print(" ");
-                    count++;
                     System.out.println(inFile);
+                    if (indexN == 1) {
+                        fileNameWriter.println(crawledFileArr[counter]);
+                    }
+                    else {
+                        fileNameWriter.println(child.getName());
+                    }
+                    counter++;
                 }
             } else {
                 System.out.println("Directory " + dirName + " doesn't exist");
             }
+
+            fileNameWriter.close();
 /*#####################################################################*/
 /*######################Ending the file tokenizing#####################*/
 /*#####################################################################*/
@@ -557,11 +587,12 @@ public class Test extends Application {
 /*#####################################################################*/
 /*######################Starting the indexing process##################*/
 /*#####################################################################*/
-            wordHashMain = getWordHash();
             long start = System.currentTimeMillis();
             System.out.println("Creating Boolean Index.");
             booleanIndexMain = indexDirectory("out");
             System.out.println("Time to index(ms): " + (System.currentTimeMillis() - start));
+            
+            wordHashMain = getWordHash();
 
             System.out.println("Creating Vector Model.");
             start = System.currentTimeMillis();
@@ -655,12 +686,25 @@ public class Test extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception, IOException {
-        primaryStage.setTitle("This is my title");
+        primaryStage.setTitle("Not Google");
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_CENTER);
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
+        ColumnConstraints c1 = new ColumnConstraints();
+        ColumnConstraints c2 = new ColumnConstraints();
+        c1.setPercentWidth(35);
+        c2.setPercentWidth(60);
+        grid.getColumnConstraints().add(c1);
+        grid.getColumnConstraints().add(c2);
+
+        GridPane overGrid = new GridPane();
+        grid.setAlignment(Pos.BASELINE_CENTER);
+        ColumnConstraints overC1 = new ColumnConstraints();
+        overC1.setPercentWidth(100);
+        overGrid.getColumnConstraints().add(overC1);
+
         Text scenetitle = new Text("Welcome");
         scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
         grid.add(scenetitle, 0, 0, 2, 1);
@@ -690,21 +734,10 @@ public class Test extends Application {
         final Text actiontarget = new Text();
         ScrollPane sp = new ScrollPane();
         sp.setContent(actiontarget);
-        grid.add(sp, 1, 5);
         grid.add(hbBtn, 1, 4);
         //grid.setStyle("-fx-background-color: white; -fx-grid-lines-visible: true");
 
         btnVec.setOnAction(new EventHandler<ActionEvent>() {
- 
-            @Override
-            public void handle(ActionEvent e) {
-                String x = userTextFieldVec.getText();
-                actiontarget.setFill(Color.FIREBRICK);
-                actiontarget.setText(x);
-            }
-        });
-
-        btn.setOnAction(new EventHandler<ActionEvent>() {
  
             @Override
             public void handle(ActionEvent e) {
@@ -719,7 +752,7 @@ public class Test extends Application {
                 //         System.out.println("The query contains only stop words.");
                 //     }
                 //     else {
-                //         runQuery(wordHashMain, booleanIndexMain, formattedQuery);
+                //         runVectorQuery(wordHashMain, vectorIndexMain, formattedQuery);
                 //         System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
                 //     }
 
@@ -730,6 +763,38 @@ public class Test extends Application {
                 //     }
                 // }
 
+                String output = "Files that match the query:\n";
+                String x = userTextFieldVec.getText();
+                String formattedQuery = processString(x);
+                System.out.println(formattedQuery);
+                actiontarget.setFill(Color.FIREBRICK);
+                if (formattedQuery.length() < 1) {
+                    actiontarget.setText("The query contains only stop words.");
+                }
+                else {
+                    try {
+                        String successString = runVectorQuery(wordHashMain, vectorIndexMain, formattedQuery);
+                        if (successString.isEmpty()) {
+                            actiontarget.setText("There are no pages that match the query.");
+                        }
+                        else {
+                            for (String str : successString.split(",")) {
+                                output += str + "\n";
+                            }
+                            actiontarget.setText(output);
+                        }
+                    }
+                    catch (FileNotFoundException err) {
+                        actiontarget.setText("Error: " + err);
+                    }
+                }
+            }
+        });
+
+        btn.setOnAction(new EventHandler<ActionEvent>() {
+ 
+            @Override
+            public void handle(ActionEvent e) {
                 actiontarget.setFill(Color.FIREBRICK);
                 String output = "";
                 String x = userTextFieldBool.getText();
@@ -744,7 +809,7 @@ public class Test extends Application {
                             actiontarget.setText("There are no pages that match the query.");
                         }
                         else {
-                            String outputString = "";
+                            String outputString = "Files that match the query:\n";
                             for (String str : successString.split(",")) {
                                 outputString += str + "\n";
                             }
@@ -759,7 +824,9 @@ public class Test extends Application {
             }
         });
 
-        Scene scene = new Scene(grid, 1000, 1000);
+        overGrid.add(grid, 0, 0);
+        overGrid.add(sp, 0, 1);
+        Scene scene = new Scene(overGrid, 1000, 1000);
         primaryStage.setScene(scene);
         primaryStage.show();
     }

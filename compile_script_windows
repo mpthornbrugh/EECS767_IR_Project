@@ -1,0 +1,4 @@
+#!/bin/bash
+# Compile Script Windows
+
+javac -cp ".;jsoup-1.8.3.jar;jfxrt.jar" Test.java

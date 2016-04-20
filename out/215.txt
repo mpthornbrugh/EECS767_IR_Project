@@ -1,2 +1,0 @@
-found 1
-object 1

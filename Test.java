@@ -12,6 +12,7 @@ import javafx.event.*;
 import javafx.stage.*;
 import javafx.scene.*;
 import javafx.scene.text.*;
+import javafx.scene.web.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -733,7 +734,10 @@ public class Test extends Application {
         hbBtn.getChildren().add(btn);
         final Text actiontarget = new Text();
         ScrollPane sp = new ScrollPane();
-        sp.setContent(actiontarget);
+
+        WebView webView = new WebView();
+
+        //sp.setContent(webView);
         grid.add(hbBtn, 1, 4);
         //grid.setStyle("-fx-background-color: white; -fx-grid-lines-visible: true");
 
@@ -769,23 +773,30 @@ public class Test extends Application {
                 System.out.println(formattedQuery);
                 actiontarget.setFill(Color.FIREBRICK);
                 if (formattedQuery.length() < 1) {
-                    actiontarget.setText("The query contains only stop words.");
+                    //actiontarget.setText("The query contains only stop words.");
+                    webView.getEngine().loadContent("<html><body><div>The query contains only stop words.</div></body></html>");
                 }
                 else {
                     try {
                         String successString = runVectorQuery(wordHashMain, vectorIndexMain, formattedQuery);
                         if (successString.isEmpty()) {
-                            actiontarget.setText("There are no pages that match the query.");
+                            webView.getEngine().loadContent("<html><body><div>There are no pages that match the query.</div></body></html>");
+                            //actiontarget.setText("There are no pages that match the query.");
                         }
                         else {
+                            String htmlOut = "<html><body>";
                             for (String str : successString.split(",")) {
+                                htmlOut += "<div><input type='checkbox'>" + str + "</div>";
                                 output += str + "\n";
                             }
-                            actiontarget.setText(output);
+                            htmlOut += "</body></html>";
+                            webView.getEngine().loadContent(htmlOut);
+                            //actiontarget.setText(output);
                         }
                     }
                     catch (FileNotFoundException err) {
-                        actiontarget.setText("Error: " + err);
+                        webView.getEngine().loadContent("<html><body><div>Error: " + err + "</div></body></html>");
+                        //actiontarget.setText("Error: " + err);
                     }
                 }
             }
@@ -800,20 +811,26 @@ public class Test extends Application {
                 String x = userTextFieldBool.getText();
                 String formattedQuery = processString(x);
                 if (formattedQuery.length() < 1) {
-                    actiontarget.setText("The query contains only stop words.");
+                    webView.getEngine().loadContent("<html><body><div>The query contains only stop words.</div></body></html>");
+                    //actiontarget.setText("The query contains only stop words.");
                 }
                 else {
                     try {
                         String successString = runQuery(wordHashMain, booleanIndexMain, formattedQuery);
                         if (successString.isEmpty()) {
-                            actiontarget.setText("There are no pages that match the query.");
+                            webView.getEngine().loadContent("<html><body><div>There are no pages that match the query.</div></body></html>");
+                            //actiontarget.setText("There are no pages that match the query.");
                         }
                         else {
+                            String htmlOut = "<html><body>";
                             String outputString = "Files that match the query:\n";
                             for (String str : successString.split(",")) {
+                                htmlOut += "<div>" + str + "</div>";
                                 outputString += str + "\n";
                             }
-                            actiontarget.setText(outputString);
+                            htmlOut += "</body></html>";
+                            webView.getEngine().loadContent(htmlOut);
+                            //actiontarget.setText(outputString);
                             //"Document " + child.getName() + " satisfies the query."
                         }
                     }
@@ -825,7 +842,7 @@ public class Test extends Application {
         });
 
         overGrid.add(grid, 0, 0);
-        overGrid.add(sp, 0, 1);
+        overGrid.add(webView, 0, 1);
         Scene scene = new Scene(overGrid, 1000, 1000);
         primaryStage.setScene(scene);
         primaryStage.show();

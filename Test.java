@@ -41,6 +41,9 @@ public class Test extends Application {
     public static List<List<Double>> vectorIndexMain = new ArrayList<List<Double>>();
     public static Map<String, Integer> wordHashMain = new HashMap<String, Integer>();
 
+    /*
+    This function is used to check if an integer value is in an Integer list
+    */
     public static boolean isInList(List<Integer> x, Integer val) {
         for (Integer i : x) {
             if (val == i) {
@@ -50,6 +53,9 @@ public class Test extends Application {
         return false;
     }
 
+    /*
+    This function is used to print out a list of lists. This is our main indexing data structure
+    */
     public static void printListOfLists (List x, PrintWriter writer) throws IOException{
         for (int i = 0; i < x.size(); i++) {
             printList(x, writer);
@@ -57,16 +63,25 @@ public class Test extends Application {
         }
     }
 
+    /*
+    This function is used to print out a single list
+    */
     public static void printList (List x, PrintWriter writer) {
         writer.println(Arrays.toString(x.toArray()));
     }
 
+    /*
+    This funciton is used to eliminate any extraneous html elements that aren't needed such as encoded spaces
+    */
     private static String eliminateHTMLEntities (String x) {
         x = x.replace("&#160;", " ");
         x = x.replace("&amp;", " ");
         return x;
     }
 
+    /*
+    This function is used to eliminate stop words, stem the word and to make sure it is only a word.
+    */
     private static String processWord (String x) {
         Stemmer s = new Stemmer();
         x = x.replace(",", "");
@@ -92,6 +107,9 @@ public class Test extends Application {
         return x;
     }
 
+    /*
+    This function is used to check if a given string is a date
+    */
     public static boolean isDate(String x) {
         if (x.contains("-")) {
             for (String str : x.split("-")) {
@@ -112,6 +130,9 @@ public class Test extends Application {
         return false;
     }
 
+    /*
+    This function is used to check if a given string is a web address
+    */
     private static boolean isWeb (String x) {
         x = x.toLowerCase();
         if (x.contains(".com") || x.contains(".org") || x.contains(".net") || x.contains(".int") || x.contains(".edu") || x.contains(".gov") || x.contains(".mil")) {
@@ -120,6 +141,9 @@ public class Test extends Application {
         return false;
     }
 
+    /*
+    This function is used in order to print out a mapping of strings to integers. Such maps are used throughout the parsing and indexing process
+    */
     public static void printMap(Map mp) {
         Iterator it = mp.entrySet().iterator();
         int count = 0;
@@ -132,6 +156,9 @@ public class Test extends Application {
         System.out.println("numWords: " + count);
     }
 
+    /*
+    This function is used in order to determine if a given string is numeric.
+    */
     public static boolean isNumeric(String str)
     {
         try
@@ -145,6 +172,9 @@ public class Test extends Application {
         return true;
     }
 
+    /*
+    This is the main function for the parsing process. It takes a file and strips it of all html and converts it to only words
+    */
     public static void tokenizeFile(String filename, String outFile) throws IOException{
         BufferedReader inputStream = new BufferedReader(new FileReader(filename));
         File UIFile = new File("file.txt");
@@ -244,6 +274,9 @@ public class Test extends Application {
         writer.close();
     }
 
+    /*
+    This function is used as the main part of the indexing process. It takes the directory of the parsed files and indexes them together
+    */
     public static List<List<Integer>> indexDirectory(String directoryName) throws IOException{
         File dir = new File(directoryName);
         File[] directoryListing = dir.listFiles();
@@ -331,6 +364,9 @@ public class Test extends Application {
         // writer3.close();
     }
 
+    /*
+    This function generates a hash table for all of the words that have been indexed.
+    */
     public static Map<String, Integer> getWordHash() throws IOException{
         String fileText = new Scanner(new File("final_words.txt")).useDelimiter("\\Z").next();
         Map<String, Integer> hash = new HashMap<String, Integer>();
@@ -342,6 +378,9 @@ public class Test extends Application {
         return hash;
     }
 
+    /*
+    This function is used to process a string in parsing. It is used in conjunction with processWord
+    */
     public static String processString(String str) {
         String processedString = "";
         for (String retval: str.split(" ")){
@@ -366,6 +405,9 @@ public class Test extends Application {
         return processedString;
     }
 
+    /*
+    This is the function that runs the Boolean Model Query
+    */
     public static String runQuery(Map<String, Integer> wordHash, List<List<Integer>> index, String processedQuery) throws IOException{
         String[] qArgs = processedQuery.split(" ");
 
@@ -409,6 +451,9 @@ public class Test extends Application {
         return returnString;
     }
 
+    /*
+    This function is used to calculate the dot product of two list "vectors"
+    */
     public static double dotProduct(List<Double> a, List<Double> b) {
         double sum = 0;
         for (int i = 0; i < a.size(); i++) {
@@ -417,6 +462,9 @@ public class Test extends Application {
         return sum;
     }
 
+    /*
+    This function is used to subtract list b from list a. AKA vector subtraction
+    */
     public static List<Double> subLists(List<Double> a, List<Double> b) {
         List<Double> c = new ArrayList<Double>();
         for (int i = 0; i < a.size(); i++) {
@@ -425,6 +473,9 @@ public class Test extends Application {
         return c;
     }
 
+    /*
+    This function is used to add list b to list a. AKA vector addition
+    */
     public static List<Double> addLists(List<Double> a, List<Double> b) {
         List<Double> c = new ArrayList<Double>();
         for (int i = 0; i < a.size(); i++) {
@@ -433,6 +484,9 @@ public class Test extends Application {
         return c;
     }
 
+    /*
+    This is the function that runs the Vector Model Query
+    */
     public static String runVectorQuery(Map<String, Integer> wordHash, List<List<Double>> index, String processedQuery) throws FileNotFoundException {
         if (processedQuery.length() < 1) {
             System.out.println("Query contains only stop words.");
@@ -542,6 +596,9 @@ public class Test extends Application {
         return returnStr;
     }
 
+    /*
+    This is the function that creates the data structures for the vector model. It expands the boolean model.
+    */
     public static List<List<Double>> createInvertedIndex(List<List<Integer>> index, Map<String, Integer> wordHash) throws IOException {
         String fileText = new Scanner(new File("final.txt")).useDelimiter("\\Z").next();
         //Create a list that will hold all the idf values for all the terms
@@ -742,9 +799,14 @@ public class Test extends Application {
         }
     }
 
+    /*
+    This is the function to generate the UI
+    */
     @Override
     public void start(Stage primaryStage) throws Exception, IOException {
+        // Create the interface
         primaryStage.setTitle("Not Google");
+        // Create a grid to position items
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_CENTER);
         grid.setHgap(10);
@@ -757,47 +819,50 @@ public class Test extends Application {
         grid.getColumnConstraints().add(c1);
         grid.getColumnConstraints().add(c2);
 
+        // Create a second parent grid to position larger items
         GridPane overGrid = new GridPane();
         grid.setAlignment(Pos.BASELINE_CENTER);
         ColumnConstraints overC1 = new ColumnConstraints();
         overC1.setPercentWidth(100);
         overGrid.getColumnConstraints().add(overC1);
 
+        // Create the title
         Text scenetitle = new Text("Welcome");
         scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
         grid.add(scenetitle, 0, 0, 2, 1);
 
+        // Create the UI elements for the Vector Query
+        // This is the query input box
         Label userName = new Label("Vector Query:");
         grid.add(userName, 0, 1);
 
         TextField userTextFieldVec = new TextField();
         grid.add(userTextFieldVec, 1, 1);
-
+        //This is the Relevant Documents Input box
         Label relevantTitle = new Label("Relevant Documents:");
         grid.add(relevantTitle, 0, 2);
-        //Need to add it to grid
 
         TextField relevantDocs = new TextField();
         grid.add(relevantDocs, 1, 2);
-        //Add to grid
-
+        //This is the Non Relevant Documents Input box
         Label nonRelevantTitle = new Label("Non Relevant Documents:");
         grid.add(nonRelevantTitle, 0, 3);
-        //Neet to add it to grid
 
         TextField nonRelevantDocs = new TextField();
         grid.add(nonRelevantDocs, 1, 3);
-        //Add to grid
 
+        // Button for adding relevant/ nonrelevant documents
         Button relDocsBtn = new Button("Add Relevant/Non-relevant Docs");
-
+        // Button for doing the vector model query
         Button btnVec = new Button("Compute");
+        // Container for the buttons
         HBox hbBtnVec = new HBox(10);
         hbBtnVec.setAlignment(Pos.BOTTOM_RIGHT);
         hbBtnVec.getChildren().add(relDocsBtn);
         hbBtnVec.getChildren().add(btnVec);
         grid.add(hbBtnVec, 1, 4);
 
+        // Create the UI elements for the Boolean Query
         Label pw = new Label("Boolean Query:");
         grid.add(pw, 0, 5);
 
@@ -813,10 +878,9 @@ public class Test extends Application {
 
         WebView webView = new WebView();
 
-        //sp.setContent(webView);
         grid.add(hbBtn, 1, 6);
-        //grid.setStyle("-fx-background-color: white; -fx-grid-lines-visible: true");
 
+        // Callback function for the Add (Non)Relevant Documents button
         relDocsBtn.setOnAction(new EventHandler<ActionEvent>() {
  
             @Override
@@ -856,6 +920,7 @@ public class Test extends Application {
             }
         });
 
+        // Callback for the vector query button
         btnVec.setOnAction(new EventHandler<ActionEvent>() {
  
             @Override
@@ -898,6 +963,7 @@ public class Test extends Application {
             }
         });
 
+        // Callback for the boolean query
         btn.setOnAction(new EventHandler<ActionEvent>() {
  
             @Override
@@ -937,9 +1003,11 @@ public class Test extends Application {
             }
         });
 
+        // Add all elements to the page
         overGrid.add(grid, 0, 0);
         overGrid.add(webView, 0, 1);
         Scene scene = new Scene(overGrid, 1000, 1000);
+        //Start the scene
         primaryStage.setScene(scene);
         primaryStage.show();
     }

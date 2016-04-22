@@ -1,5 +1,16 @@
-//To compile: javac -cp .:jsoup-1.8.3.jar Test.java
-//To run: java -cp .:jsoup-1.8.3.jar Test
+/* To Run Our Project
+Mac:
+./compile_script_mac
+./start_script_mac
+
+Linux:
+./compile_script_linux
+./start_script_linux
+
+Windows(Currently not working):
+./compile_script_windows
+./start_script_windows
+*/
 
 import java.io.*;
 import java.util.*;
@@ -22,10 +33,22 @@ public class Test extends Application {
     public static String[] stopwords = {"a", "as", "able", "about", "above", "according", "accordingly", "across", "actually", "after", "afterwards", "again", "against", "aint", "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "arent", "around", "as", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", "cmon", "cs", "came", "can", "cant", "cannot", "cant", "cause", "causes", "certain", "certainly", "changes", "clearly", "co", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldnt", "course", "currently", "definitely", "described", "despite", "did", "didnt", "different", "do", "does", "doesnt", "doing", "dont", "done", "down", "downwards", "during", "each", "edu", "eg", "eight", "either", "else", "elsewhere", "enough", "entirely", "especially", "et", "etc", "even", "ever", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except", "far", "few", "ff", "fifth", "first", "five", "followed", "following", "follows", "for", "former", "formerly", "forth", "four", "from", "further", "furthermore", "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings", "had", "hadnt", "happens", "hardly", "has", "hasnt", "have", "havent", "having", "he", "hes", "hello", "help", "hence", "her", "here", "heres", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "hi", "him", "himself", "his", "hither", "hopefully", "how", "howbeit", "however", "i", "id", "ill", "im", "ive", "ie", "if", "ignored", "immediate", "in", "inasmuch", "inc", "indeed", "indicate", "indicated", "indicates", "inner", "insofar", "instead", "into", "inward", "is", "isnt", "it", "itd", "itll", "its", "its", "itself", "just", "keep", "keeps", "kept", "know", "knows", "known", "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "lets", "like", "liked", "likely", "little", "look", "looking", "looks", "ltd", "mainly", "many", "may", "maybe", "me", "mean", "meanwhile", "merely", "might", "more", "moreover", "most", "mostly", "much", "must", "my", "myself", "name", "namely", "nd", "near", "nearly", "necessary", "need", "needs", "neither", "never", "nevertheless", "new", "next", "nine", "no", "nobody", "non", "none", "noone", "nor", "normally", "not", "nothing", "novel", "now", "nowhere", "obviously", "of", "off", "often", "oh", "ok", "okay", "old", "on", "once", "one", "ones", "only", "onto", "or", "other", "others", "otherwise", "ought", "our", "ours", "ourselves", "out", "outside", "over", "overall", "own", "particular", "particularly", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provides", "que", "quite", "qv", "rather", "rd", "re", "really", "reasonably", "regarding", "regardless", "regards", "relatively", "respectively", "right", "said", "same", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "she", "should", "shouldnt", "since", "six", "so", "some", "somebody", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "still", "sub", "such", "sup", "sure", "ts", "take", "taken", "tell", "tends", "th", "than", "thank", "thanks", "thanx", "that", "thats", "thats", "the", "their", "theirs", "them", "themselves", "then", "thence", "there", "theres", "thereafter", "thereby", "therefore", "therein", "theres", "thereupon", "these", "they", "theyd", "theyll", "theyre", "theyve", "think", "third", "this", "thorough", "thoroughly", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "twice", "two", "un", "under", "unfortunately", "unless", "unlikely", "until", "unto", "up", "upon", "us", "use", "used", "useful", "uses", "using", "usually", "value", "various", "very", "via", "viz", "vs", "want", "wants", "was", "wasnt", "way", "we", "wed", "well", "were", "weve", "welcome", "well", "went", "were", "werent", "what", "whats", "whatever", "when", "whence", "whenever", "where", "wheres", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whos", "whoever", "whole", "whom", "whose", "why", "will", "willing", "wish", "with", "within", "without", "wont", "wonder", "would", "would", "wouldnt", "yes", "yet", "you", "youd", "youll", "youre", "youve", "your", "yours", "yourself", "yourselves", "zero"};
     public static int fileCount = 0; //N in idf
     public static List<Double> idfList = new ArrayList<Double>();
+    public static List<Integer> currentShowingDocs = new ArrayList<Integer>();
+    public static List<Integer> relevantDocsList = new ArrayList<Integer>();
+    public static List<Integer> nonRelevantDocsList = new ArrayList<Integer>();
     public static String dirName = "";
     public static List<List<Integer>> booleanIndexMain = new ArrayList<List<Integer>>();
     public static List<List<Double>> vectorIndexMain = new ArrayList<List<Double>>();
     public static Map<String, Integer> wordHashMain = new HashMap<String, Integer>();
+
+    public static boolean isInList(List<Integer> x, Integer val) {
+        for (Integer i : x) {
+            if (val == i) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static void printListOfLists (List x, PrintWriter writer) throws IOException{
         for (int i = 0; i < x.size(); i++) {
@@ -394,6 +417,22 @@ public class Test extends Application {
         return sum;
     }
 
+    public static List<Double> subLists(List<Double> a, List<Double> b) {
+        List<Double> c = new ArrayList<Double>();
+        for (int i = 0; i < a.size(); i++) {
+            c.add(a.get(i) - b.get(i));
+        }
+        return c;
+    }
+
+    public static List<Double> addLists(List<Double> a, List<Double> b) {
+        List<Double> c = new ArrayList<Double>();
+        for (int i = 0; i < a.size(); i++) {
+            c.add(a.get(i) + b.get(i));
+        }
+        return c;
+    }
+
     public static String runVectorQuery(Map<String, Integer> wordHash, List<List<Double>> index, String processedQuery) throws FileNotFoundException {
         if (processedQuery.length() < 1) {
             System.out.println("Query contains only stop words.");
@@ -437,6 +476,19 @@ public class Test extends Application {
             }
         }
 
+        //Need to add and subtract the relevant and nonrelevant documents
+        //Add relevant docs
+        for (Integer i : relevantDocsList) {
+            List<Double> addList = index.get(i);
+            doubleQueryVector = addLists(doubleQueryVector, addList);
+        }
+        //Subtract non relevant docs
+        for (Integer i : nonRelevantDocsList) {
+            List<Double> subList = index.get(i);
+            doubleQueryVector = subLists(doubleQueryVector, subList);
+        }
+        //Normalize vector
+
         //Query vector finished. Now need to compare to all documents.
         int docAmount = index.size();
         List<Double> similarityList = new ArrayList<Double>();
@@ -474,13 +526,18 @@ public class Test extends Application {
 
         String returnStr = "";
 
+        List<Integer> tempList = new ArrayList<Integer>();
+
         for (String str : successString.split(",")) {
             int val = Integer.parseInt(str);
+            tempList.add(val);
             System.out.println("Document " + fileListing[val] + " satisfies the query.");
             returnStr += fileListing[val] + ",";
         }
 
         returnStr = returnStr.substring(0, returnStr.length() - 1);
+
+        currentShowingDocs = tempList;
 
         return returnStr;
     }
@@ -716,17 +773,36 @@ public class Test extends Application {
         TextField userTextFieldVec = new TextField();
         grid.add(userTextFieldVec, 1, 1);
 
+        Label relevantTitle = new Label("Relevant Documents:");
+        grid.add(relevantTitle, 0, 2);
+        //Need to add it to grid
+
+        TextField relevantDocs = new TextField();
+        grid.add(relevantDocs, 1, 2);
+        //Add to grid
+
+        Label nonRelevantTitle = new Label("Non Relevant Documents:");
+        grid.add(nonRelevantTitle, 0, 3);
+        //Neet to add it to grid
+
+        TextField nonRelevantDocs = new TextField();
+        grid.add(nonRelevantDocs, 1, 3);
+        //Add to grid
+
+        Button relDocsBtn = new Button("Add Relevant/Non-relevant Docs");
+
         Button btnVec = new Button("Compute");
         HBox hbBtnVec = new HBox(10);
         hbBtnVec.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtnVec.getChildren().add(relDocsBtn);
         hbBtnVec.getChildren().add(btnVec);
-        grid.add(hbBtnVec, 1, 2);
+        grid.add(hbBtnVec, 1, 4);
 
         Label pw = new Label("Boolean Query:");
-        grid.add(pw, 0, 3);
+        grid.add(pw, 0, 5);
 
         TextField userTextFieldBool = new TextField();
-        grid.add(userTextFieldBool, 1, 3);
+        grid.add(userTextFieldBool, 1, 5);
 
         Button btn = new Button("Compute");
         HBox hbBtn = new HBox(10);
@@ -738,34 +814,52 @@ public class Test extends Application {
         WebView webView = new WebView();
 
         //sp.setContent(webView);
-        grid.add(hbBtn, 1, 4);
+        grid.add(hbBtn, 1, 6);
         //grid.setStyle("-fx-background-color: white; -fx-grid-lines-visible: true");
+
+        relDocsBtn.setOnAction(new EventHandler<ActionEvent>() {
+ 
+            @Override
+            public void handle(ActionEvent e) {
+                try {
+                    String[] fileListing = new Scanner(new File("indexed_files_names.txt")).useDelimiter("\\Z").next().split("\n");
+
+                    String rel = relevantDocs.getText();
+                    String nonRel = nonRelevantDocs.getText();
+                    // Add relevant documents to list
+                    if (rel.length() != 0) {
+                        for (String str : rel.split(",")) {
+                            int val = Integer.parseInt(str);
+                            val = currentShowingDocs.get(val - 1);
+                            if (!isInList(relevantDocsList, val)) {
+                                relevantDocsList.add(val);
+                            }
+                        }
+                    }
+
+                    // Add non Relevant documents to list
+                    if (nonRel.length() != 0) {
+                        for (String str : nonRel.split(",")) {
+                            int val = Integer.parseInt(str);
+                            val = currentShowingDocs.get(val - 1);
+                            if (!isInList(nonRelevantDocsList, val)) {
+                                nonRelevantDocsList.add(val);
+                            }
+                        }
+                    }
+                }
+                catch (FileNotFoundException error) {
+
+                }
+
+                //webView.getEngine().loadContent("<html><body><div>" + rel + "</div><div>" + nonRel + "</div></body></html>");
+            }
+        });
 
         btnVec.setOnAction(new EventHandler<ActionEvent>() {
  
             @Override
             public void handle(ActionEvent e) {
-                // while (true) {
-                //     System.out.println("Please input a query you would like to search for:");
-                //     String query = reader.nextLine();
-
-                //     long queryStart = System.currentTimeMillis();
-                //     String formattedQuery = processString(query);
-
-                //     if (formattedQuery.length() < 1) {
-                //         System.out.println("The query contains only stop words.");
-                //     }
-                //     else {
-                //         runVectorQuery(wordHashMain, vectorIndexMain, formattedQuery);
-                //         System.out.println("Time to query(ms): " + (System.currentTimeMillis() - queryStart));
-                //     }
-
-                //     System.out.println("Would you like to do another query? y/n");
-                //     String again = reader.nextLine();
-                //     if (again.toUpperCase().equals("N")) {
-                //         break;
-                //     }
-                // }
 
                 String output = "Files that match the query:\n";
                 String x = userTextFieldVec.getText();
@@ -785,8 +879,10 @@ public class Test extends Application {
                         }
                         else {
                             String htmlOut = "<html><body>";
+                            int count = 1;
                             for (String str : successString.split(",")) {
-                                htmlOut += "<div><input type='checkbox'>" + str + "</div>";
+                                htmlOut += "<div style='margin-bottom:5px;'>" + count + ". " + str + "</div>";
+                                count++;
                                 output += str + "\n";
                             }
                             htmlOut += "</body></html>";
@@ -825,7 +921,7 @@ public class Test extends Application {
                             String htmlOut = "<html><body>";
                             String outputString = "Files that match the query:\n";
                             for (String str : successString.split(",")) {
-                                htmlOut += "<div>" + str + "</div>";
+                                htmlOut += "<div style='margin-bottom:5px;'>" + str + "</div>";
                                 outputString += str + "\n";
                             }
                             htmlOut += "</body></html>";

@@ -65,7 +65,7 @@ public class WebCrawler {
 				Document doc = Jsoup.connect(URL).get();
 				String title = doc.title();
 
-				saveUrl(("crawled/" + title + ".htm"), URL);
+				saveUrl(("in/" + title + ".htm"), URL);
 				addUrl(URL + "\n");
 				numUrlsFound++;
 
@@ -73,7 +73,7 @@ public class WebCrawler {
 
 				Elements questions = doc.select("a[href]");
 				for(Element link: questions){
-					if(link.attr("href").contains(hostName) && (link.attr("href").contains("http:") || link.attr("href").contains("http:"))) {
+					if(link.attr("href").contains(hostName) && (link.attr("href").contains("http:") || link.attr("href").contains("https:"))) {
 						String nextUrl = link.attr("abs:href");
 						boolean isNew = true;
 						for (String str : urls) {

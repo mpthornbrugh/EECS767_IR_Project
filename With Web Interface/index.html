@@ -8,8 +8,11 @@
 	<link rel="stylesheet" href="index.css">
 </head>
 <body id="body">
+<div id="loading-spinner" class="se-pre-con"></div>
 <input type="text" id="queryInput" placeholder="Query">
 <button onclick="conductQuery()">Run Query</button>
+<label for="runWithTermProximity">Use Term Proximity</label>
+<input type="checkbox" id="runWithTermProximity">
 
 <div id="parentDiv">
 
@@ -19,7 +22,7 @@
 
 <script>
 	var stop_words = ["a", "as", "able", "about", "above", "according", "accordingly", "across", "actually", "after", "afterwards", "again", "against", "aint", "all", "allow", "allows", "almost", "alone", "along", "already", "also", "although", "always", "am", "among", "amongst", "an", "and", "another", "any", "anybody", "anyhow", "anyone", "anything", "anyway", "anyways", "anywhere", "apart", "appear", "appreciate", "appropriate", "are", "arent", "around", "as", "aside", "ask", "asking", "associated", "at", "available", "away", "awfully", "be", "became", "because", "become", "becomes", "becoming", "been", "before", "beforehand", "behind", "being", "believe", "below", "beside", "besides", "best", "better", "between", "beyond", "both", "brief", "but", "by", "cmon", "cs", "came", "can", "cant", "cannot", "cant", "cause", "causes", "certain", "certainly", "changes", "clearly", "co", "com", "come", "comes", "concerning", "consequently", "consider", "considering", "contain", "containing", "contains", "corresponding", "could", "couldnt", "course", "currently", "definitely", "described", "despite", "did", "didnt", "different", "do", "does", "doesnt", "doing", "dont", "done", "down", "downwards", "during", "each", "edu", "eg", "eight", "either", "else", "elsewhere", "enough", "entirely", "especially", "et", "etc", "even", "ever", "every", "everybody", "everyone", "everything", "everywhere", "ex", "exactly", "example", "except", "far", "few", "ff", "fifth", "first", "five", "followed", "following", "follows", "for", "former", "formerly", "forth", "four", "from", "further", "furthermore", "get", "gets", "getting", "given", "gives", "go", "goes", "going", "gone", "got", "gotten", "greetings", "had", "hadnt", "happens", "hardly", "has", "hasnt", "have", "havent", "having", "he", "hes", "hello", "help", "hence", "her", "here", "heres", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "hi", "him", "himself", "his", "hither", "hopefully", "how", "howbeit", "however", "i", "id", "ill", "im", "ive", "ie", "if", "ignored", "immediate", "in", "inasmuch", "inc", "indeed", "indicate", "indicated", "indicates", "inner", "insofar", "instead", "into", "inward", "is", "isnt", "it", "itd", "itll", "its", "its", "itself", "just", "keep", "keeps", "kept", "know", "knows", "known", "last", "lately", "later", "latter", "latterly", "least", "less", "lest", "let", "lets", "like", "liked", "likely", "little", "look", "looking", "looks", "ltd", "mainly", "many", "may", "maybe", "me", "mean", "meanwhile", "merely", "might", "more", "moreover", "most", "mostly", "much", "must", "my", "myself", "name", "namely", "nd", "near", "nearly", "necessary", "need", "needs", "neither", "never", "nevertheless", "new", "next", "nine", "no", "nobody", "non", "none", "noone", "nor", "normally", "not", "nothing", "novel", "now", "nowhere", "obviously", "of", "off", "often", "oh", "ok", "okay", "old", "on", "once", "one", "ones", "only", "onto", "or", "other", "others", "otherwise", "ought", "our", "ours", "ourselves", "out", "outside", "over", "overall", "own", "particular", "particularly", "per", "perhaps", "placed", "please", "plus", "possible", "presumably", "probably", "provides", "que", "quite", "qv", "rather", "rd", "re", "really", "reasonably", "regarding", "regardless", "regards", "relatively", "respectively", "right", "said", "same", "saw", "say", "saying", "says", "second", "secondly", "see", "seeing", "seem", "seemed", "seeming", "seems", "seen", "self", "selves", "sensible", "sent", "serious", "seriously", "seven", "several", "shall", "she", "should", "shouldnt", "since", "six", "so", "some", "somebody", "somehow", "someone", "something", "sometime", "sometimes", "somewhat", "somewhere", "soon", "sorry", "specified", "specify", "specifying", "still", "sub", "such", "sup", "sure", "ts", "take", "taken", "tell", "tends", "th", "than", "thank", "thanks", "thanx", "that", "thats", "thats", "the", "their", "theirs", "them", "themselves", "then", "thence", "there", "theres", "thereafter", "thereby", "therefore", "therein", "theres", "thereupon", "these", "they", "theyd", "theyll", "theyre", "theyve", "think", "third", "this", "thorough", "thoroughly", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "took", "toward", "towards", "tried", "tries", "truly", "try", "trying", "twice", "two", "un", "under", "unfortunately", "unless", "unlikely", "until", "unto", "up", "upon", "us", "use", "used", "useful", "uses", "using", "usually", "value", "various", "very", "via", "viz", "vs", "want", "wants", "was", "wasnt", "way", "we", "wed", "well", "were", "weve", "welcome", "well", "went", "were", "werent", "what", "whats", "whatever", "when", "whence", "whenever", "where", "wheres", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whos", "whoever", "whole", "whom", "whose", "why", "will", "willing", "wish", "with", "within", "without", "wont", "wonder", "would", "would", "wouldnt", "yes", "yet", "you", "youd", "youll", "youre", "youve", "your", "yours", "yourself", "yourselves", "zero"];
-	var words, index = [], idfList;
+	var words, index = [], idfList, postingList = [], wordLocs;
 	var relevant = [];
 	var nonRelevant = [];
 	var readyToGo = false;
@@ -39,10 +42,21 @@
 		readyUp();
 	});
 
+	$.getJSON("postings.json", function(json) {
+		postingList = json;
+		readyUp();
+	});
+
+	$.getJSON("wordLocs.json", function(json) {
+		wordLocs = json;
+		readyUp();
+	});
+
 	function readyUp () {
 		console.log("Ready!");
 		numReady++;
-		if (numReady == 3) {
+		if (numReady == 5) {
+			$("#loading-spinner").fadeOut();
 			readyToGo = true;
 		}
 	}
@@ -140,6 +154,83 @@
 		return false;
 	}
 
+	function calculateTermProximity(locations) {
+		if (locations.length == 1) {
+			return {
+				"score":.5,
+				"location1":locations[0],
+				"location2":locations[0]
+			};
+		}
+		locations.sort(function (a, b) {
+			return a - b;
+		});
+		var diffArr = [];
+		for (var i = 0; i < locations.length - 1; i++) {
+			diffArr.push(locations[i+1] - locations[i]);
+		}
+		var min = Math.min.apply(Math, diffArr);
+		var loc1, loc2;
+		var repetitions = 0;
+		var locationsSet = false;
+		for (i = 0; i < diffArr.length; i++) {
+			if (diffArr[i] == min) {
+				if (!locationsSet) {
+					loc1 = i;
+					loc2 = i+1;
+					repetitions++;
+				}
+				else {
+					repetitions++;
+				}
+			}
+		}
+		if (min > 20) {
+			min = 20;
+		}
+		return {
+			"score":((20/min) * (repetitions/2)),
+			"location1":loc1,
+			"location2":loc2
+		};
+	}
+
+	function get100Words (docQuery, query_terms) {
+		var currentWords = wordLocs[docQuery["name"]];
+		var location;
+		for (var i = 0; i < currentWords.length; i++) {
+			var word = currentWords[i];
+			for (var j = 0; j < query_terms.length; j++) {
+				if (word == query_terms[j]) {
+					location = i;
+					break;
+				}
+			}
+		}
+		if (docQuery["term_proximity"]) {
+			location = Math.floor(docQuery["term_proximity"]["location2"] - docQuery["term_proximity"]["location2"]);
+		}
+		var retString = "";
+		var start = (((location - 20) < 0) ? 0 : (location - 20));
+		for (i = start; i < (start+100); i++) {
+			var curWord = currentWords[i];
+			var isQueryTerm = false;
+			for (j = 0; j < query_terms.length; j++) {
+				if (curWord == query_terms[j]) {
+					isQueryTerm = true;
+					break;
+				}
+			}
+			if (isQueryTerm) {
+				retString += "<strong>" + curWord + "</strong> ";
+			}
+			else {
+				retString += curWord + " ";
+			}
+		}
+		return retString;
+	}
+
 	function conductQuery () {
 		if (!readyToGo) {
 			return;
@@ -224,6 +315,8 @@
 			full_query_vec = normalize(full_query_vec);
 		}
 
+		var doTermCheck = $("#runWithTermProximity").is(":checked");
+
 		//Get the document vectors
 		var doc_queries = [];
 		for (i = 0; i < index.length; i++) {
@@ -237,25 +330,49 @@
 				queries.push(val);
 			}
 			if (hasValue) {
-				doc_queries.push({
+				var obj = {
 					"id":i,
 					"queries":index[i].vector,
 					"name":index[i].name,
 					"url":index[i].url
-				});
+				};
+
+				if (doTermCheck) {
+					var termLocations = [];
+					for (j = 0; j < word_indexes.length; j++) {
+						var locs = postingList[word_indexes[j]][index[i].name];
+						for (var k = 0; k < locs.length; k++) {
+							termLocations.push(locs[k]);
+						}
+					}
+					var tp = calculateTermProximity(termLocations);
+					obj["term_proximity"] = tp;
+				}
+
+				doc_queries.push(obj);
 			}
 		}
 
-		//Calculate the cosine similarities here (query • doc_query)
+		//Calculate the cosine similarities here (query • doc_query) Also multiply by the term_proximity if it is given
 		for (i = 0; i < doc_queries.length; i++) {
-			doc_queries[i]["cos_sim"] = dot(doc_queries[i]["queries"], full_query_vec);
+			doc_queries[i]["cos_sim"] = (dot(doc_queries[i]["queries"], full_query_vec) * (doc_queries[i]["term_proximity"] ? doc_queries[i]["term_proximity"]["score"] : 1));
 		}
 		//Then sort them based on the cosine similarity.
 		doc_queries.sort(function(a, b) {
 			return b.cos_sim - a.cos_sim;
 		});
 		for (i = 0; i < doc_queries.length; i++) {
-			var div = '<div class="query_item"><span class="feedback_span">Relevant<input id="rel" type="radio" name="group' + doc_queries[i]["id"] + '" value=1 ' + isRel(doc_queries[i]["id"]) + '>Non Relevant<input id="nonrel" style="border-right: 1px solid black;" type="radio" name="group' + doc_queries[i]["id"] + '" value=2 ' + isNonRel(doc_queries[i]["id"]) + '></span><a href="' + doc_queries[i]["url"] + '" target=_blank>' + doc_queries[i]["name"] + '</a> Cosine Similarity(' + doc_queries[i]["cos_sim"] + ')</div>';
+			var div = '<div class="query_item">';
+			div += '<span class="feedback_span">';
+			div += 'Relevant<input id="rel" type="radio" name="group' + doc_queries[i]["id"] + '" value=1 ' + isRel(doc_queries[i]["id"]) + '>';
+			div += 'Non Relevant<input id="nonrel" type="radio" name="group' + doc_queries[i]["id"] + '" value=2 ' + isNonRel(doc_queries[i]["id"]) + '>';
+			div += '</span>';
+			div += '<a href="' + doc_queries[i]["url"] + '" target=_blank>' + doc_queries[i]["name"] + '</a>';
+			div += ' Cosine Similarity(' + doc_queries[i]["cos_sim"] + ')';
+			div += '<div class="preview_div">';
+			div += get100Words(doc_queries[i], query_terms);
+			div += '</div>';
+			div += '</div>';
 			parent.append(div);
 		}
 		var end = new Date().getTime();

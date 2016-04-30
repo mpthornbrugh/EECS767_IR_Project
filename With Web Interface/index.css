@@ -19,3 +19,19 @@
 	font-size: 2em;
 	font-weight: bold;
 }
+
+.se-pre-con {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 9999;
+	opacity:.6;
+	background: url(Preloader_3.gif) center no-repeat #fff;
+}
+
+.preview_div {
+	padding-left: 20px;
+	background: rgb(230,230,230);
+}
